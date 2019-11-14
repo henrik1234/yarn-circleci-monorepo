@@ -34,7 +34,7 @@ aliases:
   - &restore-build-flag
       restore_cache:
         keys:
-          - dependencies-cache-{{ checksum "package.json" }}
+          - build-flag-{{ checksum "package.json" }}
 
   - &test-build-flag
       run:
@@ -72,7 +72,7 @@ commands:
           paths:
             - build.flag
           key:
-            dependencies-cache-{{ checksum "package.json" }}
+            build-flag-{{ checksum "package.json" }}
 
   node-build-steps:
     steps:
