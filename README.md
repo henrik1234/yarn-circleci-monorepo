@@ -1,9 +1,9 @@
-# yarn-circleci-monorepo
-> A monorepo architecture built using Yarn workspaces and CircleCI
+# Yarn CircleCI Monorepo
+> A monorepo architecture built using Yarn Workspaces and CircleCI
 
-This repository also nods towards two other technology choices:
+This repository nods towards two other technology choices:
 
-- AWS Cloudformation
+- AWS CloudFormation
 - TypeScript
 
 It works fine without them, but you may need to delete some of the boilerplate before getting started if you don't love them like we do.
@@ -32,13 +32,13 @@ This architecture uses CircleCI's cache feature as a build flag to avoid rebuild
 
 Note that code changes won't bust this cache, only `package.json` changes. Due to this, it is good practice to bump the version of the service whenever there is a code change. We use [semantic versioning](https://semver.org/). Here's how it works:
 
-1. `restore-build-flag` is an *alias* that runs after checking out the repository. The only thing in this cache is a file called `build.fag`.
+1. `restore-build-flag` is an *alias* that runs after checking out the repository. The only thing in this cache is a file called `build.flag`.
   ```yaml
   restore_cache:
     keys:
-      - dependencies-cache-{{ checksum "package.json" }}
+      - build-flag-{{ checksum "package.json" }}
   ```
-2. `test-build-flag` is an *alias* which can be run right after the build flag is restored. If `build.flag` exists, CircleCI will skip the rest of this job.
+2. `test-build-flag` is an *alias* that can be run right after the build flag is restored. If `build.flag` exists, CircleCI will skip the rest of this job.
   ```yaml
   run:
     name: Exit if build flag exists
@@ -60,7 +60,7 @@ Note that code changes won't bust this cache, only `package.json` changes. Due t
           paths:
             - build.flag
           key:
-            dependencies-cache-{{ checksum "package.json" }
+            build-flag-{{ checksum "package.json" }
   ```
 
 ### Cache
@@ -95,6 +95,7 @@ Our CircleCI usage doesn't have as many quirks as Yarn Workspaces, but a few thi
 
 1. We're grossly misusing cache as a build and deploy flag
 2. Our job control is limited so more complex workflows may not be able to leverage the `test-build-flag` alias
+3. A service's `package.json` must change to bust the build flag cache; generally speaking, that means bumping the version of the service at the least
 3. CircleCI's API is limited
     - We can't tell Circle that we skipped the build, it assumes the step succeeded which is a little misleading
     - We can't easily retry a step that we "skipped" due to a build flag, we have to go bump the service's version
