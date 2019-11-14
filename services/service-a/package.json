@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+  },
+  "devDependencies": {
+    "typescript": "^3.0.1"
+  },
+  "name": "service-a",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "rm -rf lib/ && tsc",
+    "deploy": "aws cloudformation deploy --template-file packaged-template.yaml --stack-name $npm_package_name --capabilities CAPABILITY_IAM",
+    "type-check": "tsc --noEmit",
+    "package": "aws cloudformation package --template-file ./template.yaml --output-template-file packaged-template.yaml --s3-bucket $S3_CF_ARTIFACT_BUCKET"
+  },
+  "workspaces": {
+    "nohoist": [
+      "**"
+    ]
+  }
+}
