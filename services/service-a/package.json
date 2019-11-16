@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "package-a": "0.1.0"
   },
   "devDependencies": {
     "typescript": "^3.0.1"

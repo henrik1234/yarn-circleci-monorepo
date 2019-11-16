@@ -1,7 +1,8 @@
 {
   "name": "yarn-circleci-monorepo",
   "workspaces": [
-    "services/**"
+    "services/**",
+    "packages/**"
   ],
   "private": true
 }

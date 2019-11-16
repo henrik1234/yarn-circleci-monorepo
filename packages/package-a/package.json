@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+  },
+  "devDependencies": {
+    "typescript": "^3.0.1"
+  },
+  "name": "package-a",
+  "main": "./lib/index",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "rm -rf lib/ && tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "workspaces": {
+    "nohoist": [
+      "**"
+    ]
+  }
+}
