@@ -77,9 +77,13 @@ commands:
   node-build-steps:
     steps:
       - checkout:
-          path: ~/
+          # Since our working_directory is deeper than the root,
+          # remind the job where it needs to checkout.
+          path: ~/yarn-circleci-monorepo
       - *restore-build-flag
       - *test-build-flag
+      # Services and packages in a Workspace don't get their own
+      # yarn.lock so we need to generate them manually.
       - *generate-lock-file
       - *restore-cache
       - *install_aws_cli
@@ -102,6 +106,8 @@ jobs:
   build-service-a:
     docker:
       - image: circleci/node:10
+
+    # This makes all commands from here on out relative to service-a
     working_directory: ~/yarn-cicleci-monorepo/services/service-a
 
     steps:
