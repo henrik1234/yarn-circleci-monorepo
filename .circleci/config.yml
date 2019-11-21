@@ -94,9 +94,12 @@ commands:
             yarn
             yarn build
             rm -rf src
+      - *save-cache
+      - run:
+          name: Prune
+          command: |
             yarn --production
             yarn package
-      - *save-cache
       - run:
           name: Deploy
           command: yarn deploy
