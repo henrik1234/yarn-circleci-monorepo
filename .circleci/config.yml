@@ -1,25 +1,31 @@
 version: 2.1
 
 orbs:
-  aws-cli: circleci/aws-cli@0.1.15
+  now:
+    executors:
+      default:
+        docker:
+          - image: circleci/node:lts
+    commands:
+      install:
+        steps:
+          - run:
+              name: Install Now CLI
+              command: |
+                if [[ $(command -v now) == "" ]]; then
+                  sudo npm install --global --unsafe-perm now@16.7.3
+                else
+                  echo "Now is already installed. No operation was performed."
+                fi
+
+defaults: &defaults
+  docker:
+    - image: circleci/node:12
 
 aliases:
   - &docker-image
     docker:
       - image: circleci/node:10
-
-  - &install_aws_cli aws-cli/install
-
-  - &install_typescript_globally
-    run:
-      name: Install Typescript globally
-      command: yarn global add typescript
-
-  - &configure_aws_cli
-    aws-cli/configure:
-      aws-region: 'AWS_REGION'
-      aws-access-key-id: 'AWS_ACCESS_KEY_ID'
-      aws-secret-access-key: 'AWS_SECRET_ACCESS_KEY'
 
   - &deploy
     run:
@@ -32,35 +38,34 @@ aliases:
         only: master
 
   - &restore-build-flag
-      restore_cache:
-        keys:
-          - build-flag-{{ checksum "package.json" }}
+    restore_cache:
+      keys:
+        - build-flag-{{ checksum "package.json" }}
 
   - &test-build-flag
-      run:
-        name: Exit if build flag exists
-        command: |
-          FILE=build.flag
-          if test -f "$FILE"; then
-              echo "$FILE exist"
-              circleci step halt
-          fi
-
+    run:
+      name: Exit if build flag exists
+      command: |
+        FILE=build.flag
+        if test -f "$FILE"; then
+            echo "$FILE exist"
+            circleci step halt
+        fi
   - &generate-lock-file
-      run:
-        name: Generate lock file
-        command: yarn generate-lock-entry >> yarn.lock
+    run:
+      name: Generate lock file
+      command: yarn generate-lock-entry >> yarn.lock
 
   - &restore-cache
-      restore_cache:
-        keys:
-          - dependencies-cache-{{ checksum "yarn.lock" }}
+    restore_cache:
+      keys:
+        - dependencies-cache-{{ checksum "yarn.lock" }}
 
   - &save-cache
-      save_cache:
-        paths:
-          - node_modules
-        key: dependencies-cache-{{ checksum "yarn.lock" }}
+    save_cache:
+      paths:
+        - node_modules
+      key: dependencies-cache-{{ checksum "yarn.lock" }}
 
 commands:
   save-build-flag:
@@ -71,56 +76,36 @@ commands:
       - save_cache:
           paths:
             - build.flag
-          key:
-            build-flag-{{ checksum "package.json" }}
+          key: build-flag-{{ checksum "package.json" }}
 
   node-build-steps:
     steps:
       - checkout:
           # Since our working_directory is deeper than the root,
           # remind the job where it needs to checkout.
-          path: ~/yarn-circleci-monorepo
+          path: ~/skeleton-admin
       - *restore-build-flag
       - *test-build-flag
       # Services and packages in a Workspace don't get their own
       # yarn.lock so we need to generate them manually.
       - *generate-lock-file
       - *restore-cache
-      - *install_aws_cli
-      - *configure_aws_cli
       - run:
-          name: Build
+          name: install & test
           command: |
-            yarn
-            yarn build
-            rm -rf src
+            yarn install
+            yarn test:all
       - *save-cache
-      - run:
-          name: Prune
-          command: |
-            yarn --production
-            yarn package
-      - run:
-          name: Deploy
-          command: yarn deploy
       - save-build-flag
 
 jobs:
-  build-service-a:
-    docker:
-      - image: circleci/node:10
-
-    # This makes all commands from here on out relative to service-a
-    working_directory: ~/yarn-cicleci-monorepo/services/service-a
-
-    steps:
-      - node-build-steps
+  - build-react-app:
+      <<: *defaults
+      steps:
+        - node-build-steps
 
 workflows:
   version: 2
-  service-a:
+  install-and-test:
     jobs:
-      - build-service-a:
-          <<: *deploy_production_filters
-          context: aws-production
-
+      - build-react-app
